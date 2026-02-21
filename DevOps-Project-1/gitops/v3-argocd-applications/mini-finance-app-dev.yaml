@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+    name: mini-finance-app-dev
+    namespace: argocd
+spec:
+    project: finance-apps
+    source:
+        repoURL: https://github.com/lakunzy7/expandox-lab2.git
+        targetRevision: develop
+        path: DevOps-Project-1/k8s/dev
+    destination:
+        server: https://kubernetes.default.svc
+        namespace: mini-finance-dev
+    syncPolicy:
+        automated:
+            prune: true
+            selfHeal: true
