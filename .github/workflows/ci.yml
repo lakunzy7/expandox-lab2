@@ -1,17 +1,13 @@
 name: CI - Build, Scan, Push, Update Manifests
 
-# Trigger only on app code or manifest changes
 on:
     push:
         branches:
             - "**"
         paths:
-            - "DevOps-Project-1/mini-finance-app/src/**"
-            - "DevOps-Project-1/mini-finance-app/Dockerfile"
-            - "DevOps-Project-1/mini-finance-app/requirements.txt"
+            - "DevOps-Project-1/mini-finance-app/**"
             - "DevOps-Project-1/k8s/**"
             - ".github/workflows/ci.yml"
-            - "DevOps-Project-1/mini-finance-app/index.html"
     pull_request:
         paths-ignore:
             - "DevOps-Project-1/mini-finance-app/*.md"
@@ -21,26 +17,27 @@ permissions:
     contents: write
 
 jobs:
-    build_and_deploy:
+    build_scan_and_deploy:
         runs-on: ubuntu-latest
-        # Linked to your GitHub environment protection rules
+        name: Build, Scan, and Deploy
+        #  Note: Ensure you have an environment named 'production' in your GitHub repo settings
         environment: production
 
         steps:
             # 1️⃣ Checkout code
             - name: Checkout code
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
               with:
                   fetch-depth: 0
 
             # 2️⃣ Setup Docker Buildx
             - name: Setup Docker Buildx
-              uses: docker/setup-buildx-action@v2
+              uses: docker/setup-buildx-action@v3
 
-            # 3️⃣ Login Docker (main/develop only)
+            # 3️⃣ Login Docker
             - name: Login to Docker Hub
               if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
-              uses: docker/login-action@v2
+              uses: docker/login-action@v3
               with:
                   username: ${{ secrets.DOCKER_USERNAME }}
                   password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -53,7 +50,7 @@ jobs:
                   docker build -t $IMAGE_TAG ./DevOps-Project-1/mini-finance-app
                   echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
-            # 5️⃣ Scan with Trivy
+            # 5️⃣ Scan with Trivy (v0.33.1 as per official docs)
             - name: Scan Docker Image
               uses: aquasecurity/trivy-action@0.33.1
               with:
@@ -78,12 +75,15 @@ jobs:
               run: |
                   git config --global user.name 'github-actions[bot]'
                   git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-                  sed -i "s|image:.*|image: ${{ env.IMAGE_TAG }}|g" DevOps-Project-1/k8s/dev/manifests.yaml
-                  git add DevOps-Project-1/k8s/dev/manifests.yaml
-                  git commit -m "ci: update dev image tag to ${{ env.IMAGE_TAG }}" || echo "No changes to commit"
-                  git push https://${{ github.actor }}:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:develop
 
-            # 8️⃣ Update Prod Manifest
+                  # Matches the specific manifests.yaml found in your tree
+                  sed -i "s|image: lakunzy/mini-finance-app:.*|image: ${{ env.IMAGE_TAG }}|g" DevOps-Project-1/k8s/dev/manifests.yaml
+
+                  git add DevOps-Project-1/k8s/dev/manifests.yaml
+                  git commit -m "ci: update dev image tag to ${{ github.sha }}" || echo "No changes to commit"
+                  git push origin develop
+
+            # 8️⃣ Update Prod Manifest (Only runs if main branch exists)
             - name: Update Prod Manifest
               if: github.ref == 'refs/heads/main'
               env:
@@ -91,7 +91,9 @@ jobs:
               run: |
                   git config --global user.name 'github-actions[bot]'
                   git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-                  sed -i "s|image:.*|image: ${{ env.IMAGE_TAG }}|g" DevOps-Project-1/k8s/production/manifests.yaml
+
+                  sed -i "s|image: lakunzy/mini-finance-app:.*|image: ${{ env.IMAGE_TAG }}|g" DevOps-Project-1/k8s/production/manifests.yaml
+
                   git add DevOps-Project-1/k8s/production/manifests.yaml
-                  git commit -m "ci: update prod image tag to ${{ env.IMAGE_TAG }}" || echo "No changes to commit"
-                  git push https://${{ github.actor }}:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:main
+                  git commit -m "ci: update prod image tag to ${{ github.sha }}" || echo "No changes to commit"
+                  git push origin main
