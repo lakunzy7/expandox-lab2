@@ -6,15 +6,14 @@ on:
         branches:
             - "**"
         paths:
-            - "mini-finance-app/src/**"
-            - "mini-finance-app/Dockerfile"
-            - "mini-finance-app/requirements.txt"
-            - "k8s/**"
-    # Ignore documentation changes
+            - "DevOps-Project-1/mini-finance-app/src/**"
+            - "DevOps-Project-1/mini-finance-app/Dockerfile"
+            - "DevOps-Project-1/mini-finance-app/requirements.txt"
+            - "DevOps-Project-1/k8s/**"
     pull_request:
         paths-ignore:
-            - "mini-finance-app/*.md"
-            - "mini-finance-app/docs/**"
+            - "DevOps-Project-1/mini-finance-app/*.md"
+            - "DevOps-Project-1/mini-finance-app/docs/**"
 
 permissions:
     contents: write
@@ -22,7 +21,7 @@ permissions:
 jobs:
     build_and_deploy:
         runs-on: ubuntu-latest
-        # Correct placement for the environment protection rules
+        # Linked to your GitHub environment protection rules
         environment: production
 
         steps:
@@ -49,7 +48,7 @@ jobs:
               id: docker_build
               run: |
                   IMAGE_TAG=lakunzy/mini-finance-app:${{ github.sha }}
-                  docker build -t $IMAGE_TAG ./mini-finance-app
+                  docker build -t $IMAGE_TAG ./DevOps-Project-1/mini-finance-app
                   echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
             # 5️⃣ Scan with Trivy
@@ -77,8 +76,8 @@ jobs:
               run: |
                   git config --global user.name 'github-actions[bot]'
                   git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-                  sed -i "s|image:.*|image: ${{ env.IMAGE_TAG }}|g" k8s/dev/manifests.yaml
-                  git add k8s/dev/manifests.yaml
+                  sed -i "s|image:.*|image: ${{ env.IMAGE_TAG }}|g" DevOps-Project-1/k8s/dev/manifests.yaml
+                  git add DevOps-Project-1/k8s/dev/manifests.yaml
                   git commit -m "ci: update dev image tag to ${{ env.IMAGE_TAG }}" || echo "No changes to commit"
                   git push https://${{ github.actor }}:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:develop
 
@@ -90,7 +89,7 @@ jobs:
               run: |
                   git config --global user.name 'github-actions[bot]'
                   git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-                  sed -i "s|image:.*|image: ${{ env.IMAGE_TAG }}|g" k8s/production/manifests.yaml
-                  git add k8s/production/manifests.yaml
+                  sed -i "s|image:.*|image: ${{ env.IMAGE_TAG }}|g" DevOps-Project-1/k8s/production/manifests.yaml
+                  git add DevOps-Project-1/k8s/production/manifests.yaml
                   git commit -m "ci: update prod image tag to ${{ env.IMAGE_TAG }}" || echo "No changes to commit"
                   git push https://${{ github.actor }}:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:main
