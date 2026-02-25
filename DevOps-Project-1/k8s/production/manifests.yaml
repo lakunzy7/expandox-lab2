@@ -25,6 +25,13 @@ metadata:
         env: production
 spec:
     replicas: 2
+    strategy:
+        type: RollingUpdate
+        rollingUpdate:
+            maxUnavailable: 0
+            maxSurge: 1
+            #matchLabels:
+            # app: mini-finance-app
     selector:
         matchLabels:
             app: mini-finance-app
@@ -37,7 +44,7 @@ spec:
                 - name: dockerhub-creds
             containers:
                 - name: mini-finance-app
-                  image: lakunzy/mini-finance-app:7e76b0295fa9bda443e9ec9f2c553d93f241b4cd
+                  image: lakunzy/mini-finance-app:904af73a0dd1a94f71332e01207484b9f99e9008
                   imagePullPolicy: IfNotPresent
                   ports:
                       - containerPort: 80

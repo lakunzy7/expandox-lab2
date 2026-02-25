@@ -6,15 +6,18 @@ metadata:
     labels:
         app: mini-finance-app
 spec:
-    replicas: 3
+    replicas: 2
+    # This ensures zero downtime during ArgoCD syncs
     strategy:
         type: RollingUpdate
         rollingUpdate:
-            maxUnavailable: 1
+            maxUnavailable: 0
             maxSurge: 1
+    # --- MANDATORY SECTION: Deployment needs this to find its pods ---
     selector:
         matchLabels:
             app: mini-finance-app
+    # ----------------------------------------------------------------
     template:
         metadata:
             labels:
@@ -24,7 +27,7 @@ spec:
                 - name: dockerhub-creds
             containers:
                 - name: mini-finance-app
-                  image: lakunzy/mini-finance-app:1910e075844d27f8d0a3cff97ccf7d3c86568c7f
+                  image: lakunzy/mini-finance-app:3032a0db4b94add3013b60ae88e7178d567306ee
                   imagePullPolicy: IfNotPresent
                   ports:
                       - containerPort: 80
@@ -39,13 +42,13 @@ spec:
                       httpGet:
                           path: /index.html
                           port: 80
-                      initialDelaySeconds: 5
+                      initialDelaySeconds: 10 # Increased slightly for stability
                       periodSeconds: 5
                   livenessProbe:
                       httpGet:
                           path: /index.html
                           port: 80
-                      initialDelaySeconds: 15
+                      initialDelaySeconds: 20
                       periodSeconds: 20
 ---
 apiVersion: v1
