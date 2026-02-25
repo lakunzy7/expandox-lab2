@@ -25,6 +25,13 @@ metadata:
         env: production
 spec:
     replicas: 2
+    strategy:
+        type: RollingUpdate
+        rollingUpdate:
+            maxUnavailable: 0
+            maxSurge: 1
+            matchLabels:
+                app: mini-finance-app
     selector:
         matchLabels:
             app: mini-finance-app
