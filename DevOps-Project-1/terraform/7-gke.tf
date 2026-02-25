@@ -1,5 +1,5 @@
 resource "google_container_cluster" "gke" {
-  name                     = "demo"
+  name                     = "mini-finance-gkscluster"
   location                 = "us-central1-a"
   remove_default_node_pool = true
   initial_node_count       = 1

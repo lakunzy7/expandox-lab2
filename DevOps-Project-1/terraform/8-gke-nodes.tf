@@ -28,9 +28,19 @@ resource "google_container_node_pool" "general" {
     auto_upgrade = true
   }
 
+  # 1. ADD THIS BLOCK: Forces GKE to delete an old node before creating a new one
+  upgrade_settings {
+    max_surge       = 0
+    max_unavailable = 1
+  }
+
   node_config {
     preemptible  = false
-    machine_type = "e2-medium"
+    machine_type = "e2-standard-2"
+
+    # 2. ADD THESE TWO LINES: Drops the size and switches off the SSD quota
+    disk_size_gb = 50
+    disk_type    = "pd-standard"
 
     labels = {
       role = "general"
