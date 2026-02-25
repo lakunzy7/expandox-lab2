@@ -30,8 +30,8 @@ spec:
         rollingUpdate:
             maxUnavailable: 0
             maxSurge: 1
-            matchLabels:
-                app: mini-finance-app
+            #matchLabels:
+            # app: mini-finance-app
     selector:
         matchLabels:
             app: mini-finance-app
