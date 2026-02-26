@@ -24,7 +24,7 @@ metadata:
         app: mini-finance-app
         env: production
 spec:
-    replicas: 2
+    replicas: 3
     strategy:
         type: RollingUpdate
         rollingUpdate:
